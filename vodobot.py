@@ -1,16 +1,21 @@
-import subprocess
-import sys
+import telebot
 import requests
 import random
 import base64
 import json
-import telebot
 
 # Telegram bot token
 TOKEN = "6396522183:AAEnn5XSKtNlBf1c45Zr1vAbAWgANTkRjek"
 
 # Telebot instance
 bot = telebot.TeleBot(TOKEN)
+
+# Global variables
+telno = ""
+parola = ""
+proid = ""
+kod = ""
+url = "https://m.vodafone.com.tr/maltgtwaycbu/api/"
 
 # Generate random IP address
 def generate_random_ip():
@@ -31,7 +36,7 @@ def ask_phone(message):
 
 # Ask for password
 def ask_password(message):
-    global parola
+    global parola, proid
     parola = message.text
     headers = {
         "User-Agent": "VodafoneMCare/2308211432 CFNetwork/1325.0.1 Darwin/21.1.0",
@@ -46,7 +51,6 @@ def ask_password(message):
         "X-Forwarded-For": generate_random_ip()
     }
 
-    url = "https://m.vodafone.com.tr/maltgtwaycbu/api/"
     data = {
         "context": "e30=",
         "username": telno,
@@ -65,7 +69,7 @@ def ask_password(message):
 
 # Ask for verification code
 def ask_verification_code(message):
-    global kod
+    global kod, proid
     kod = message.text
     veri = {
         "langId": "tr_TR",
@@ -107,35 +111,19 @@ def ask_verification_code(message):
         "X-Forwarded-For": generate_random_ip()
     }
 
-    o_data = {"campaignID": 6873, "latitude": "0.0", "longitude": "0.0"}
     cark_data = {
         "clientKey": "AC491770-B16A-4273-9CE7-CA790F63365E",
         "clientVersion": "16.8.3",
         "language": "tr",
         "operatingSystem": "android"
     }
-    o_url = f"https://m.vodafone.com.tr/marketplace?method=participateCampaignBE&sid={proid}"
-    cark_url = f"https://m.vodafone.com.tr/squat/getSquatMarketingProduct?sid={proid}"
 
-    al_url = f"https://m.vodafone.com.tr/squat/updateSquatMarketingProduct?sid={proid}"
+    cark_url = f"https://m.vodafone.com.tr/squat/getSquatMarketingProduct?sid={proid}"
 
     cark = requests.post(cark_url, headers=o_head, json=cark_data)
     try:
         c1 = cark.json()["data"]["name"]
         c2 = cark.json()["data"]["code"]
-        c3 = cark.json()["data"]["interactionID"]
-        c4 = cark.json()["data"]["identifier"]
-        al_data = {
-            "clientKey": "AC491770-B16A-4273-9CE7-CA790F63365E",
-            "clientVersion": "16.8.3",
-            "code": "",
-            "identifier": c4,
-            "interactionId": c3,
-            "language": "tr",
-            "operatingSystem": "android"
-        }
-        al_url = f"https://m.vodafone.com.tr/squat/updateSquatMarketingProduct?sid={proid}"
-        al = requests.post(al_url, headers=o_head, json=al_data).json()
         result_message = f"[✓] {c1}\n"
         if c2:
             result_message += f"[•] İndirim Kodu: {c2}"
